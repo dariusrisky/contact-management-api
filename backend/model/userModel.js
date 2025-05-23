@@ -2,12 +2,9 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
-    _id : false
-  },
-  {
-    id: {
+    _id: {
       type: mongoose.Schema.Types.UUID,
-      auto: true,
+      default: () => new mongoose.Types.UUID(),
     },
     Username: {
       type: String,
@@ -30,10 +27,8 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    Usertype: {
+    phone_number: {
       type: String,
-      enum: ["admin-inventory", "user"],
-      default: "user",
     },
     SESION_TOKEN:  {
       type: String,
@@ -44,9 +39,16 @@ const userSchema = new mongoose.Schema(
 
 );
 
+const userModel = mongoose.model("user", userSchema,)
+
 const cmsSchema = new mongoose.Schema(
   {
-    id : userSchema.id,
+    _id : {
+      type: mongoose.Schema.Types.UUID,
+      ref: "user",
+      unique: true,
+      required: [true, "User id is required"],
+    },
     name_contact: {
       type: String,
       required: [true, "Name is required"],
@@ -72,6 +74,10 @@ const cmsSchema = new mongoose.Schema(
   }
 )
 
+const cms = mongoose.model("cms", cmsSchema,)
 
 
-module.exports = mongoose.model("userAdmin", userSchema,);
+module.exports = {
+  userModel,
+  cms,
+};

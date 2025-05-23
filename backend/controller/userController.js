@@ -1,12 +1,13 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const userModel = require("../model/userModel");
+const { userModel, cms } = require("../model/userModel");
 
 const registerAccount = async (req, res) => {
-  const { username, email, password, password_confirm } = req.body;
+  const { username, email, phone_number, password, password_confirm } =
+    req.body;
 
-  if (!username || !email || !password || !password_confirm) {
+  if (!username || !email || !phone_number || !password || !password_confirm) {
     return res.status(420).json({
       message: "Please fill in all fields",
     });
@@ -31,6 +32,7 @@ const registerAccount = async (req, res) => {
       Username: username,
       Email: email,
       Password: hashedPassword,
+      phone_number: phone_number,
     });
     res.status(201).json({
       message: "User has Register Account",
@@ -40,6 +42,7 @@ const registerAccount = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       message: "Server error",
     });
@@ -77,11 +80,11 @@ const loginAccount = async (req, res) => {
       userId: user.id,
     },
     process.env.ACCES_TOKEN_SECRET,
-    { expiresIn: "1800s" }
+    { expiresIn: "15m" }
   );
 
   const refreshToken = jwt.sign(
-    { userId: user.id, username: user.Username, email: user.Email },
+    { id: user.id, username: user.Username, email: user.Email },
     process.env.REFRESH_TOKEN_SECRET,
     { expiresIn: "1d" }
   );
@@ -90,7 +93,7 @@ const loginAccount = async (req, res) => {
   await user.save();
 
   res.cookie("REFRESH_TOKEN", refreshToken, {
-    HTTPOnly: true,
+    HttpOnly: true,
     secure: true,
     maxAge: 24 * 60 * 60 * 1000,
   });
@@ -101,23 +104,24 @@ const loginAccount = async (req, res) => {
 const logoutAccount = async (req, res) => {
   try {
     const cookie = req.cookies;
-
-    if (!cookie.REFRESH_TOKEN) return res.sendStatus(204);
-
     const refreshToken = cookie.REFRESH_TOKEN;
-    const user = await userModel.findOne({ refreshToken: refreshToken });
+
+    if (!cookie) return res.sendStatus(401);
+    if (!cookie.REFRESH_TOKEN) return res.sendStatus(402);
+
+    const user = await userModel.findOne({ SESION_TOKEN: refreshToken });
+
     if (!user) {
       res.clearCookie("REFRESH_TOKEN", {
         HTTPOnly: true,
         secure: true,
       });
-      return res.sendStatus(205);
+      return res.sendStatus(207);
     }
 
-    user.SESION_TOKEN = "";
+    user.SESION_TOKEN = null;
     await user.save();
 
-    res.status(200);
   } catch (error) {
     console.error(error);
     return res.status(500).json({
@@ -139,13 +143,13 @@ const refresh = async (req, res) => {
     REFRESH_TOKEN,
     process.env.REFRESH_TOKEN_SECRET,
     (err, decoded) => {
-      if (err || user.id !== decoded.userId) {
-        console.error(user.id, decoded.userId);
+      if (err || user.id !== decoded.id) {
+        console.error(user.id, decoded.id);
         return res.sendStatus(403);
       }
 
       const accessToken = jwt.sign(
-        { id: decoded.userId },
+        { id: decoded.id },
         process.env.ACCES_TOKEN_SECRET,
         { expiresIn: "1800s" }
       );
