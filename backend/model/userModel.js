@@ -1,10 +1,14 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
+const { ref } = require("process");
+const { types } = require("util");
+const { type } = require("os");
 
 const userSchema = new mongoose.Schema(
   {
-    _id: {
+    _id : {
       type: mongoose.Schema.Types.UUID,
-      default: () => new mongoose.Types.UUID(),
+      default : () => crypto.randomUUID()
     },
     Username: {
       type: String,
@@ -39,15 +43,13 @@ const userSchema = new mongoose.Schema(
 
 );
 
-const userModel = mongoose.model("user", userSchema,)
+const user = mongoose.model("user", userSchema);
 
 const cmsSchema = new mongoose.Schema(
   {
-    _id : {
-      type: mongoose.Schema.Types.UUID,
-      ref: "user",
-      unique: true,
-      required: [true, "User id is required"],
+    authorid : {
+      type : mongoose.Schema.Types.UUID,
+      ref : "user",
     },
     name_contact: {
       type: String,
@@ -55,6 +57,10 @@ const cmsSchema = new mongoose.Schema(
     },
     note_contact: {
       type: String,
+    },
+    address_contact: {
+      type: String,
+      required: [true, "Address is required"],
     },
     phone_number_contact : {
       type : Number,
@@ -76,8 +82,7 @@ const cmsSchema = new mongoose.Schema(
 
 const cms = mongoose.model("cms", cmsSchema,)
 
-
 module.exports = {
-  userModel,
+  user,
   cms,
 };

@@ -1,7 +1,9 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const { userModel, cms } = require("../model/userModel");
+const { user } = require("../model/userModel");
+
+const userModel = user;
 
 const registerAccount = async (req, res) => {
   const { username, email, phone_number, password, password_confirm } =
@@ -122,6 +124,8 @@ const logoutAccount = async (req, res) => {
     user.SESION_TOKEN = null;
     await user.save();
 
+    return res.status(200);
+    
   } catch (error) {
     console.error(error);
     return res.status(500).json({

@@ -1,19 +1,20 @@
 const jwt = require("jsonwebtoken");
-const { userModel } = require("../model/userModel");
+const { user } = require("../model/userModel");
 
 const cookieMiddleware = async (req, res, next) => {
   const token = req.cookies.REFRESH_TOKEN;
+  console.log(token);
   try {
     const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
 
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    const user = await userModel.findOne({ SESION_TOKEN: token });
+    console.log(decoded);
+    if (!decoded) return res.status(401).json({ message: "Unauthorized" });
 
-    if (!user) res.status(402).json({ message: "Unauthorized" });
+    const userfind = await user.findOne({ SESION_TOKEN: token });
 
-    if (user.id !== decoded.id) {
+    if (!userfind) res.status(402).json({ message: "Unauthorized" });
+
+    if (userfind.id !== decoded.id) {
       return res.status(403).json({ message: "Forbidden" });
     }
     next();
