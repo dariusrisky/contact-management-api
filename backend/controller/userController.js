@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const { user } = require("../model/userModel");
+const { user } = require("../model/Model");
 
 const userModel = user;
 
@@ -125,7 +125,6 @@ const logoutAccount = async (req, res) => {
     await user.save();
 
     return res.status(200);
-    
   } catch (error) {
     console.error(error);
     return res.status(500).json({
