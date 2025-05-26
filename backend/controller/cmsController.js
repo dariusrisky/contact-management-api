@@ -86,17 +86,18 @@ const showContact = async (req, res) => {
   }
 };
 
-const getContact = async (req, res) => {
+const searchContact = async (req, res) => {
   try {
     const authData = req.data.data.id;
-    const get = await cmsModel.find({ authorid: authData , $or : [
-      {name_contact : {$regex : req.params.key}}
-    ]});
+    const get = await cmsModel.find({
+      authorid: authData,
+      $or: [{ name_contact: { $regex: req.params.key } }],
+    });
     if (!get) return res.status(401).json({ msg: "No data" });
 
     console.log(get);
     return res.status(200).json({
-      data: get
+      data: get,
     });
   } catch (error) {
     console.log(error);
@@ -105,8 +106,90 @@ const getContact = async (req, res) => {
   }
 };
 
+const getContact = async (req, res) => {
+  try {
+    const key = req.params.key;
+    if (!key) return res.status(401).json({ msg: "Please enter the fields" });
+    const authData = req.data.data.id;
+    if (!authData) return res.status(404).json({ msg: "Not authorized" });
+    const get = await cmsModel.findOne({
+      authorid: authData,
+      _id: key,
+    });
+
+    return res.status(200).json({
+      data: get,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "internal server error" });
+  }
+};
+
+const updateContact = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const authData = req.data.data.id;
+    if (!authData) return res.status(404).json({ msg: "Not authorized" });
+    const { name, note, address, phone_number, email } = req.body;
+    if (!name) {
+      return res.status(402).json({ msg: "Name is required" });
+    } else if (!phone_number) {
+      return res.status(402).json({ msg: "Phone number is required" });
+    } else if (!email) {
+      return res.status(402).json({ msg: "Email is required" });
+    }
+    const contact = await cmsModel.findOneAndUpdate(
+      { _id: id, authorid: authData },
+      {
+        name_contact: name,
+        note_contact: note,
+        address_contact: address,
+        phone_number_contact: phone_number,
+        email_contact: email,
+      }
+    );
+    return res.status(200).json({
+      msg: "Contact updated successfully",
+      contact: {
+        id: contact._id,
+        authorid: contact.authorid,
+        name: contact.name_contact,
+        note: contact.note_contact,
+        address: contact.address_contact,
+        phone: contact.phone_number_contact,
+        email: contact.email_contact,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+};
+
+const deleteContact = async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!id) return res.status(401).json({ msg: "Please enter the fields" });
+    const authData = req.data.data.id;
+    if (!authData) return res.status(404).json({ msg: "Not authorized" });
+    const contact = await cmsModel.findOneAndDelete({
+      _id: id,
+      authorid: authData,
+    });
+    if (!contact) return res.status(404).json({ msg: "Contact not found" });
+    return res.status(200).json({ msg: "Contact deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ msg: "Internal Server Error" });
+  }
+};
+
 module.exports = {
   addcontact,
   showContact,
+  searchContact,
   getContact,
+  updateContact,
+  deleteContact,
 };
