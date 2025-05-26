@@ -1,5 +1,6 @@
-const { connect } = require("mongoose");
+const { connect, get } = require("mongoose");
 const { cms } = require("../model/Model");
+const { search } = require("../routes/webRoutes");
 
 const cmsModel = cms;
 
@@ -85,7 +86,27 @@ const showContact = async (req, res) => {
   }
 };
 
+const getContact = async (req, res) => {
+  try {
+    const authData = req.data.data.id;
+    const get = await cmsModel.find({ authorid: authData , $or : [
+      {name_contact : {$regex : req.params.key}}
+    ]});
+    if (!get) return res.status(401).json({ msg: "No data" });
+
+    console.log(get);
+    return res.status(200).json({
+      data: get
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json("Internal Server Error");
+  }
+};
+
 module.exports = {
   addcontact,
   showContact,
+  getContact,
 };

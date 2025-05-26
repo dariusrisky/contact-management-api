@@ -6,7 +6,11 @@ const {
   refresh,
 } = require("../controller/userController");
 const cookieMiddleware = require("../middleware/cookieMiddleware");
-const { addcontact, showContact } = require("../controller/cmsController");
+const {
+  addcontact,
+  showContact,
+  getContact,
+} = require("../controller/cmsController");
 const route = express.Router();
 
 route.post("/auth/register-account", registerAccount);
@@ -33,6 +37,12 @@ route.get(
   "/protected/contact-management/show-contact",
   cookieMiddleware,
   showContact
+);
+
+route.get(
+  "/protected/contact-management/search-contact/:key",
+  cookieMiddleware,
+  getContact
 );
 
 module.exports = route;
